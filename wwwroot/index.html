@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сервисный Центр - Автоматизация</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Сервисный Центр</h1>
+            <p class="subtitle">Система автоматизации обработки данных</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-content">
+                        <h3 id="totalRequests">0</h3>
+                        <p>Всего заявок</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🆕</div>
+                    <div class="stat-content">
+                        <h3 id="newRequests">0</h3>
+                        <p>Новые</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⚙️</div>
+                    <div class="stat-content">
+                        <h3 id="inProgressRequests">0</h3>
+                        <p>В работе</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-content">
+                        <h3 id="completedRequests">0</h3>
+                        <p>Завершено</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="requests">Заявки</button>
+            <button class="tab-btn" data-tab="customers">Клиенты</button>
+            <button class="tab-btn" data-tab="technicians">Техники</button>
+        </nav>
+
+        <div class="tab-content" id="requests">
+            <div class="section-header">
+                <h2>Заявки на ремонт</h2>
+                <button class="btn btn-primary" onclick="showAddRequestModal()">+ Новая заявка</button>
+            </div>
+            <div class="table-container">
+                <table id="requestsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Клиент</th>
+                            <th>Устройство</th>
+                            <th>Проблема</th>
+                            <th>Статус</th>
+                            <th>Техник</th>
+                            <th>Стоимость</th>
+                            <th>Дата</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content hidden" id="customers">
+            <div class="section-header">
+                <h2>Клиенты</h2>
+                <button class="btn btn-primary" onclick="showAddCustomerModal()">+ Новый клиент</button>
+            </div>
+            <div class="table-container">
+                <table id="customersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ФИО</th>
+                            <th>Телефон</th>
+                            <th>Email</th>
+                            <th>Дата регистрации</th>
+                            <th>Заявок</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content hidden" id="technicians">
+            <div class="section-header">
+                <h2>Техники</h2>
+                <button class="btn btn-primary" onclick="showAddTechnicianModal()">+ Новый техник</button>
+            </div>
+            <div class="table-container">
+                <table id="techniciansTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ФИО</th>
+                            <th>Телефон</th>
+                            <th>Специализация</th>
+                            <th>Статус</th>
+                            <th>Заявок</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="techniciansTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Форма</h2>
+            <form id="modalForm">
+                <div id="formFields"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="detailsModal" class="modal hidden">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="closeDetailsModal()">&times;</span>
+            <h2>Детали заявки</h2>
+            <div id="detailsContent"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeDetailsModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
