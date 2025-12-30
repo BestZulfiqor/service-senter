@@ -74,11 +74,11 @@ function renderServiceRequests() {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${request.id}</td>
-            <td>${request.customer?.fullName || 'Не указан'}</td>
+            <td>${request.customerName || 'Не указан'}</td>
             <td>${request.deviceBrand} ${request.deviceModel}</td>
             <td>${request.problemDescription.substring(0, 50)}...</td>
             <td>${getStatusBadge(request.status)}</td>
-            <td>${request.assignedTechnician?.fullName || 'Не назначен'}</td>
+            <td>${request.assignedTechnicianName || 'Не назначен'}</td>
             <td>${request.finalCost ? request.finalCost + ' ₽' : (request.estimatedCost ? request.estimatedCost + ' ₽' : '-')}</td>
             <td>${formatDate(request.createdAt)}</td>
             <td>
@@ -122,11 +122,11 @@ async function showRequestDetails(id) {
             <div class="details-grid">
                 <div class="detail-item">
                     <label>Клиент:</label>
-                    <div class="value">${request.customer?.fullName || 'Не указан'}</div>
+                    <div class="value">${request.customerName || 'Не указан'}</div>
                 </div>
                 <div class="detail-item">
                     <label>Телефон:</label>
-                    <div class="value">${request.customer?.phone || '-'}</div>
+                    <div class="value">${request.customerPhone || '-'}</div>
                 </div>
                 <div class="detail-item">
                     <label>Устройство:</label>
@@ -146,7 +146,7 @@ async function showRequestDetails(id) {
                 </div>
                 <div class="detail-item">
                     <label>Техник:</label>
-                    <div class="value">${request.assignedTechnician?.fullName || 'Не назначен'}</div>
+                    <div class="value">${request.assignedTechnicianName || 'Не назначен'}</div>
                 </div>
                 <div class="detail-item">
                     <label>Стоимость:</label>
