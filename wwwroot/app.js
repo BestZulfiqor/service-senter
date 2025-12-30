@@ -3,13 +3,12 @@ const API_BASE_URL = '/api';
 let currentCustomers = [];
 let currentTechnicians = [];
 let currentServiceRequests = [];
+let currentUser = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
     initializeTabs();
     loadDashboardStats();
-    loadServiceRequests();
-    loadCustomers();
-    loadTechnicians();
     
     setInterval(() => {
         loadDashboardStats();
@@ -20,8 +19,236 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 30000);
 });
 
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    const userRole = localStorage.getItem('userRole');
+    const userName = localStorage.getItem('userFullName');
+    
+    if (token && userRole) {
+        // Пользователь авторизован
+        document.getElementById('loginBtn').style.display = 'none';
+        document.getElementById('userMenu').style.display = 'flex';
+        document.getElementById('userName').textContent = userName;
+        
+        currentUser = {
+            role: userRole,
+            name: userName,
+            customerId: localStorage.getItem('customerId'),
+            technicianId: localStorage.getItem('technicianId')
+        };
+        
+        showInterfaceByRole(userRole);
+    } else {
+        // Пользователь не авторизован - показываем публичную часть
+        document.getElementById('loginBtn').style.display = 'block';
+        document.getElementById('userMenu').style.display = 'none';
+    }
+}
+
+function showInterfaceByRole(role) {
+    if (role === 'Admin') {
+        // Админ - показываем админ панель
+        document.getElementById('admin').style.display = 'block';
+        document.getElementById('dashboard').style.display = 'none';
+        loadServiceRequests();
+        loadCustomers();
+        loadTechnicians();
+    } else if (role === 'Client') {
+        // Клиент - показываем его заявки
+        document.getElementById('dashboardLink').style.display = 'block';
+        document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('clientDashboard').style.display = 'block';
+        document.getElementById('technicianDashboard').style.display = 'none';
+        document.getElementById('admin').style.display = 'none';
+        loadClientRequests();
+    } else if (role === 'Technician') {
+        // Техник - показываем назначенные ему заявки
+        document.getElementById('dashboardLink').style.display = 'block';
+        document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('clientDashboard').style.display = 'none';
+        document.getElementById('technicianDashboard').style.display = 'block';
+        document.getElementById('admin').style.display = 'none';
+        loadTechnicianRequests();
+    }
+}
+
+function logout() {
+    localStorage.clear();
+    window.location.href = '/';
+}
+
 function scrollToAdmin() {
-    document.getElementById('admin').scrollIntoView({ behavior: 'smooth' });
+    if (currentUser && currentUser.role === 'Admin') {
+        document.getElementById('admin').scrollIntoView({ behavior: 'smooth' });
+    } else if (currentUser) {
+        document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' });
+    } else {
+        window.location.href = '/auth.html';
+    }
+}
+
+function getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
+
+// Загрузка заявок клиента
+async function loadClientRequests() {
+    const customerId = localStorage.getItem('customerId');
+    if (!customerId) return;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/servicerequests`, {
+            headers: getAuthHeaders()
+        });
+        const allRequests = await response.json();
+        
+        // Фильтруем только заявки этого клиента
+        const clientRequests = allRequests.filter(r => r.customerId == customerId);
+        renderClientRequests(clientRequests);
+    } catch (error) {
+        console.error('Ошибка загрузки заявок клиента:', error);
+    }
+}
+
+function renderClientRequests(requests) {
+    const tbody = document.getElementById('clientRequestsTable');
+    tbody.innerHTML = '';
+    
+    requests.forEach(request => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${request.id}</td>
+            <td>${request.deviceBrand} ${request.deviceModel}</td>
+            <td>${request.problemDescription.substring(0, 50)}...</td>
+            <td>${getStatusBadge(request.status)}</td>
+            <td>${request.assignedTechnicianName || 'Не назначен'}</td>
+            <td>${request.finalCost ? request.finalCost + ' ₽' : (request.estimatedCost ? request.estimatedCost + ' ₽' : '-')}</td>
+            <td>${formatDate(request.createdAt)}</td>
+            <td>
+                <button class="btn btn-info" onclick="showRequestDetails(${request.id})">Детали</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Загрузка заявок техника
+async function loadTechnicianRequests() {
+    const technicianId = localStorage.getItem('technicianId');
+    if (!technicianId) return;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/servicerequests`, {
+            headers: getAuthHeaders()
+        });
+        const allRequests = await response.json();
+        
+        // Фильтруем только заявки назначенные этому технику
+        const technicianRequests = allRequests.filter(r => r.assignedTechnicianId == technicianId);
+        renderTechnicianRequests(technicianRequests);
+    } catch (error) {
+        console.error('Ошибка загрузки заявок техника:', error);
+    }
+}
+
+function renderTechnicianRequests(requests) {
+    const tbody = document.getElementById('technicianRequestsTable');
+    tbody.innerHTML = '';
+    
+    requests.forEach(request => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${request.id}</td>
+            <td>${request.customerName}</td>
+            <td>${request.deviceBrand} ${request.deviceModel}</td>
+            <td>${request.problemDescription.substring(0, 50)}...</td>
+            <td>${getStatusBadge(request.status)}</td>
+            <td>${request.finalCost ? request.finalCost + ' ₽' : (request.estimatedCost ? request.estimatedCost + ' ₽' : '-')}</td>
+            <td>${formatDate(request.createdAt)}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn btn-info" onclick="showRequestDetails(${request.id})">Детали</button>
+                    <button class="btn btn-edit" onclick="updateRequestStatus(${request.id})">Обновить</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function updateRequestStatus(id) {
+    const request = currentServiceRequests.find(r => r.id === id);
+    if (!request) return;
+    
+    const formFields = `
+        <div class="form-group">
+            <label>Статус:</label>
+            <select name="status" required>
+                <option value="Новая" ${request.status === 'Новая' ? 'selected' : ''}>Новая</option>
+                <option value="В работе" ${request.status === 'В работе' ? 'selected' : ''}>В работе</option>
+                <option value="Завершена" ${request.status === 'Завершена' ? 'selected' : ''}>Завершена</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Итоговая стоимость:</label>
+            <input type="number" name="finalCost" value="${request.finalCost || ''}" step="0.01">
+        </div>
+        <div class="form-group">
+            <label>Комментарий к работе:</label>
+            <textarea name="workLog" placeholder="Опишите выполненную работу"></textarea>
+        </div>
+    `;
+    
+    showModal('Обновить статус заявки', formFields, async (formData) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/servicerequests/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    id: id,
+                    customerId: request.customerId,
+                    deviceType: request.deviceType,
+                    deviceBrand: request.deviceBrand,
+                    deviceModel: request.deviceModel,
+                    serialNumber: request.serialNumber,
+                    problemDescription: request.problemDescription,
+                    status: formData.status,
+                    estimatedCost: request.estimatedCost,
+                    finalCost: formData.finalCost ? parseFloat(formData.finalCost) : null,
+                    assignedTechnicianId: request.assignedTechnicianId,
+                    createdAt: request.createdAt,
+                    completedAt: formData.status === 'Завершена' ? new Date().toISOString() : request.completedAt
+                })
+            });
+            
+            if (response.ok) {
+                // Добавляем запись в журнал работ если есть комментарий
+                if (formData.workLog) {
+                    await fetch(`${API_BASE_URL}/worklogs`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({
+                            serviceRequestId: id,
+                            description: formData.workLog,
+                            loggedBy: currentUser.name
+                        })
+                    });
+                }
+                
+                closeModal();
+                loadTechnicianRequests();
+            } else {
+                alert('Ошибка обновления заявки');
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert('Ошибка обновления заявки');
+        }
+    });
 }
 
 function initializeTabs() {

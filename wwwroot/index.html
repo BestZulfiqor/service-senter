@@ -15,9 +15,15 @@
                 <li><a href="#home" class="nav-link">Главная</a></li>
                 <li><a href="#services" class="nav-link">Услуги</a></li>
                 <li><a href="#about" class="nav-link">О нас</a></li>
-                <li><a href="#admin" class="nav-link admin-link">Админ панель</a></li>
+                <li id="dashboardLink" style="display:none;"><a href="#dashboard" class="nav-link">Мои заявки</a></li>
             </ul>
-            <a href="tel:+992446001177" class="phone-btn">📞 +992 44 600-11-77</a>
+            <div id="authButtons" style="display: flex; gap: 10px;">
+                <a href="/auth.html" class="phone-btn" id="loginBtn">Войти</a>
+                <div id="userMenu" style="display:none; align-items: center; gap: 10px;">
+                    <span id="userName" style="color: var(--text-dark);"></span>
+                    <button onclick="logout()" class="phone-btn">Выйти</button>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -109,8 +115,60 @@
         </div>
     </section>
 
+    <!-- Client/Technician Dashboard -->
+    <section id="dashboard" class="admin-section" style="display:none;">
+        <div class="container">
+            <h2 class="section-title" id="dashboardTitle">Мои заявки</h2>
+            <div id="clientDashboard" style="display:none;">
+                <div class="section-header">
+                    <h3>Список моих заявок</h3>
+                    <button class="btn btn-primary" onclick="showCreateRequestForClient()">+ Новая заявка</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Устройство</th>
+                                <th>Проблема</th>
+                                <th>Статус</th>
+                                <th>Техник</th>
+                                <th>Стоимость</th>
+                                <th>Дата</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientRequestsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="technicianDashboard" style="display:none;">
+                <div class="section-header">
+                    <h3>Назначенные мне заявки</h3>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Клиент</th>
+                                <th>Устройство</th>
+                                <th>Проблема</th>
+                                <th>Статус</th>
+                                <th>Стоимость</th>
+                                <th>Дата</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="technicianRequestsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Admin Panel Section -->
-    <section id="admin" class="admin-section">
+    <section id="admin" class="admin-section" style="display:none;">
         <div class="container">
 
             <h2 class="section-title">Панель администратора</h2>
