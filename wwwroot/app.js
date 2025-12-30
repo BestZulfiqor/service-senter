@@ -13,12 +13,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     setInterval(() => {
         loadDashboardStats();
-        const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+        const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
         if (activeTab === 'requests') loadServiceRequests();
         else if (activeTab === 'customers') loadCustomers();
         else if (activeTab === 'technicians') loadTechnicians();
     }, 30000);
 });
+
+function scrollToAdmin() {
+    document.getElementById('admin').scrollIntoView({ behavior: 'smooth' });
+}
 
 function initializeTabs() {
     const tabButtons = document.querySelectorAll('.tab-btn');
@@ -47,10 +51,28 @@ async function loadDashboardStats() {
         const response = await fetch(`${API_BASE_URL}/servicerequests/statistics`);
         const stats = await response.json();
         
-        document.getElementById('totalRequests').textContent = stats.totalRequests;
-        document.getElementById('newRequests').textContent = stats.newRequests;
-        document.getElementById('inProgressRequests').textContent = stats.inProgressRequests;
-        document.getElementById('completedRequests').textContent = stats.completedRequests;
+        // Обновляем статистику в админ панели
+        const adminTotalRequests = document.getElementById('adminTotalRequests');
+        if (adminTotalRequests) adminTotalRequests.textContent = stats.totalRequests;
+        
+        const newRequests = document.getElementById('newRequests');
+        if (newRequests) newRequests.textContent = stats.newRequests;
+        
+        const inProgressRequests = document.getElementById('inProgressRequests');
+        if (inProgressRequests) inProgressRequests.textContent = stats.inProgressRequests;
+        
+        const completedRequests = document.getElementById('completedRequests');
+        if (completedRequests) completedRequests.textContent = stats.completedRequests;
+        
+        // Обновляем статистику на главной странице (секция About)
+        const aboutTotalRequests = document.querySelectorAll('#totalRequests');
+        aboutTotalRequests.forEach(el => el.textContent = stats.totalRequests);
+        
+        // Загружаем количество клиентов
+        const customersResponse = await fetch(`${API_BASE_URL}/customers`);
+        const customers = await customersResponse.json();
+        const totalCustomers = document.getElementById('totalCustomers');
+        if (totalCustomers) totalCustomers.textContent = customers.length;
     } catch (error) {
         console.error('Ошибка загрузки статистики:', error);
     }

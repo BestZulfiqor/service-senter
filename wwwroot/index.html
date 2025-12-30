@@ -3,48 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Сервисный Центр - Автоматизация</title>
+    <title>Сервисный Центр - Профессиональный ремонт техники</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🔧 Сервисный Центр</h1>
-            <p class="subtitle">Система автоматизации обработки данных</p>
-        </header>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">🔧 Сервисный Центр</div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link">Главная</a></li>
+                <li><a href="#services" class="nav-link">Услуги</a></li>
+                <li><a href="#about" class="nav-link">О нас</a></li>
+                <li><a href="#admin" class="nav-link admin-link">Админ панель</a></li>
+            </ul>
+            <a href="tel:+992446001177" class="phone-btn">📞 +992 44 600-11-77</a>
+        </div>
+    </nav>
 
-        <div class="dashboard">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">📊</div>
-                    <div class="stat-content">
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Ваш <span class="highlight">доверенный</span><br>авторизованный<br>сервисный центр</h1>
+            <p class="hero-subtitle">Бережно заботимся о ваших устройствах, гарантируем качественный ремонт и внимательное отношение. Используем только оригинальные комплектующие.</p>
+            <div class="hero-features">
+                <div class="feature-badge">✓ Персональный подход к клиентам</div>
+                <div class="feature-badge">✓ Безопасность и приватность данных</div>
+                <div class="feature-badge">✓ 100 дней гарантии на ремонт</div>
+            </div>
+            <button class="cta-button" onclick="scrollToAdmin()">Оставить заявку</button>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+        <div class="container">
+            <h2 class="section-title">Услуги</h2>
+            <p class="section-subtitle">Полный спектр технического обслуживания и ремонта</p>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">💻</div>
+                    <h3>Диагностика и ремонт компьютеров</h3>
+                    <p>Профессиональная диагностика и ремонт любой сложности</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🔧</div>
+                    <h3>Профилактическое обслуживание</h3>
+                    <p>Регулярное обслуживание для продления срока службы</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">💾</div>
+                    <h3>Установка и обновление ПО</h3>
+                    <p>Установка операционных систем и программного обеспечения</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">✅</div>
+                    <h3>Гарантийное обслуживание</h3>
+                    <p>Полное гарантийное сопровождение всех работ</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🖨️</div>
+                    <h3>Ремонт принтеров и сканеров</h3>
+                    <p>Восстановление работоспособности офисной техники</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🔩</div>
+                    <h3>Замена комплектующих</h3>
+                    <p>Использование только оригинальных запчастей</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">📞</div>
+                    <h3>Телефонная поддержка</h3>
+                    <p>Круглосуточная консультация специалистов</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">📱</div>
+                    <h3>Ремонт смартфонов</h3>
+                    <p>Быстрый и качественный ремонт мобильных устройств</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title">О нас</h2>
+            <div class="about-content">
+                <p>Мы — надежный сервисный центр по ремонту компьютерных устройств. Предоставляем услуги для частных лиц и бизнеса. Гарантируем качество в течение 100 дней после ремонта, демонстрируя наше отношение к сервису и людям, с которыми мы работаем.</p>
+                <div class="about-stats">
+                    <div class="stat-item">
                         <h3 id="totalRequests">0</h3>
-                        <p>Всего заявок</p>
+                        <p>Выполненных заявок</p>
                     </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">🆕</div>
-                    <div class="stat-content">
-                        <h3 id="newRequests">0</h3>
-                        <p>Новые</p>
+                    <div class="stat-item">
+                        <h3 id="totalCustomers">0</h3>
+                        <p>Довольных клиентов</p>
                     </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">⚙️</div>
-                    <div class="stat-content">
-                        <h3 id="inProgressRequests">0</h3>
-                        <p>В работе</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-content">
-                        <h3 id="completedRequests">0</h3>
-                        <p>Завершено</p>
+                    <div class="stat-item">
+                        <h3>100</h3>
+                        <p>Дней гарантии</p>
                     </div>
                 </div>
             </div>
         </div>
+    </section>
+
+    <!-- Admin Panel Section -->
+    <section id="admin" class="admin-section">
+        <div class="container">
+
+            <h2 class="section-title">Панель администратора</h2>
+            <div class="dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <h3 id="adminTotalRequests">0</h3>
+                            <p>Всего заявок</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🆕</div>
+                        <div class="stat-content">
+                            <h3 id="newRequests">0</h3>
+                            <p>Новые</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚙️</div>
+                        <div class="stat-content">
+                            <h3 id="inProgressRequests">0</h3>
+                            <p>В работе</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <h3 id="completedRequests">0</h3>
+                            <p>Завершено</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         <nav class="tabs">
             <button class="tab-btn active" data-tab="requests">Заявки</button>
@@ -125,7 +226,33 @@
                 </table>
             </div>
         </div>
-    </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>🔧 Сервисный Центр</h3>
+                    <p>Профессиональный ремонт и обслуживание техники</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Контакты</h4>
+                    <p>📞 +992 44 600-11-77</p>
+                    <p>📧 info@servicecentr.tj</p>
+                </div>
+                <div class="footer-section">
+                    <h4>График работы</h4>
+                    <p>Пн-Пт: 9:00 - 18:00</p>
+                    <p>Сб-Вс: 10:00 - 16:00</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Сервисный Центр. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
 
     <div id="modal" class="modal hidden">
         <div class="modal-content">
