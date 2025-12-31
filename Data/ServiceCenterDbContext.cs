@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using ServiceCenter.Models;
 
 namespace ServiceCenter.Data
 {
-    public class ServiceCenterDbContext : IdentityDbContext<User>
+    public class ServiceCenterDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     {
         public ServiceCenterDbContext(DbContextOptions<ServiceCenterDbContext> options)
             : base(options)

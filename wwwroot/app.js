@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     initializeTabs();
     loadDashboardStats();
-    
+
     setInterval(() => {
         loadDashboardStats();
         const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
@@ -23,20 +23,20 @@ function checkAuth() {
     const token = localStorage.getItem('token');
     const userRole = localStorage.getItem('userRole');
     const userName = localStorage.getItem('userFullName');
-    
+
     if (token && userRole) {
         // Пользователь авторизован
         document.getElementById('loginBtn').style.display = 'none';
         document.getElementById('userMenu').style.display = 'flex';
         document.getElementById('userName').textContent = userName;
-        
+
         currentUser = {
             role: userRole,
             name: userName,
             customerId: localStorage.getItem('customerId'),
             technicianId: localStorage.getItem('technicianId')
         };
-        
+
         showInterfaceByRole(userRole);
     } else {
         // Пользователь не авторизован - показываем публичную часть
@@ -99,13 +99,13 @@ function getAuthHeaders() {
 async function loadClientRequests() {
     const customerId = localStorage.getItem('customerId');
     if (!customerId) return;
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}/servicerequests`, {
             headers: getAuthHeaders()
         });
         const allRequests = await response.json();
-        
+
         // Фильтруем только заявки этого клиента
         const clientRequests = allRequests.filter(r => r.customerId == customerId);
         renderClientRequests(clientRequests);
@@ -117,7 +117,7 @@ async function loadClientRequests() {
 function renderClientRequests(requests) {
     const tbody = document.getElementById('clientRequestsTable');
     tbody.innerHTML = '';
-    
+
     requests.forEach(request => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -136,17 +136,82 @@ function renderClientRequests(requests) {
     });
 }
 
+// Функция создания заявки для клиента
+function showCreateRequestForClient() {
+    const customerId = localStorage.getItem('customerId');
+    if (!customerId) {
+        alert('Ошибка: не удалось определить ID клиента');
+        return;
+    }
+
+    const formFields = `
+        <div class="form-group">
+            <label>Тип устройства:</label>
+            <input type="text" name="deviceType" required placeholder="Например: Ноутбук, Телефон">
+        </div>
+        <div class="form-group">
+            <label>Бренд:</label>
+            <input type="text" name="deviceBrand" required placeholder="Например: Apple, Samsung">
+        </div>
+        <div class="form-group">
+            <label>Модель:</label>
+            <input type="text" name="deviceModel" required placeholder="Например: iPhone 13, Galaxy S21">
+        </div>
+        <div class="form-group">
+            <label>Серийный номер:</label>
+            <input type="text" name="serialNumber" placeholder="Если известен">
+        </div>
+        <div class="form-group">
+            <label>Описание проблемы:</label>
+            <textarea name="problemDescription" required placeholder="Опишите подробно проблему с устройством"></textarea>
+        </div>
+    `;
+
+    showModal('Новая заявка на ремонт', formFields, async (formData) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/servicerequests`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    customerId: parseInt(customerId),
+                    deviceType: formData.deviceType,
+                    deviceBrand: formData.deviceBrand,
+                    deviceModel: formData.deviceModel,
+                    serialNumber: formData.serialNumber || '',
+                    problemDescription: formData.problemDescription,
+                    status: 'Новая',
+                    estimatedCost: null,
+                    assignedTechnicianId: null
+                })
+            });
+
+            if (response.ok) {
+                closeModal();
+                loadClientRequests();
+                alert('Заявка успешно создана!');
+            } else {
+                const error = await response.json();
+                alert('Ошибка создания заявки: ' + (error.message || 'Неизвестная ошибка'));
+            }
+            // В функции showInterfaceByRole, в блоке для роли Client:
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert('Ошибка создания заявки');
+        }
+    });
+}
+
 // Загрузка заявок техника
 async function loadTechnicianRequests() {
     const technicianId = localStorage.getItem('technicianId');
     if (!technicianId) return;
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}/servicerequests`, {
             headers: getAuthHeaders()
         });
         const allRequests = await response.json();
-        
+
         // Фильтруем только заявки назначенные этому технику
         const technicianRequests = allRequests.filter(r => r.assignedTechnicianId == technicianId);
         renderTechnicianRequests(technicianRequests);
@@ -158,7 +223,7 @@ async function loadTechnicianRequests() {
 function renderTechnicianRequests(requests) {
     const tbody = document.getElementById('technicianRequestsTable');
     tbody.innerHTML = '';
-    
+
     requests.forEach(request => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -183,7 +248,7 @@ function renderTechnicianRequests(requests) {
 function updateRequestStatus(id) {
     const request = currentServiceRequests.find(r => r.id === id);
     if (!request) return;
-    
+
     const formFields = `
         <div class="form-group">
             <label>Статус:</label>
@@ -202,7 +267,7 @@ function updateRequestStatus(id) {
             <textarea name="workLog" placeholder="Опишите выполненную работу"></textarea>
         </div>
     `;
-    
+
     showModal('Обновить статус заявки', formFields, async (formData) => {
         try {
             const response = await fetch(`${API_BASE_URL}/servicerequests/${id}`, {
@@ -224,7 +289,7 @@ function updateRequestStatus(id) {
                     completedAt: formData.status === 'Завершена' ? new Date().toISOString() : request.completedAt
                 })
             });
-            
+
             if (response.ok) {
                 // Добавляем запись в журнал работ если есть комментарий
                 if (formData.workLog) {
@@ -238,7 +303,7 @@ function updateRequestStatus(id) {
                         })
                     });
                 }
-                
+
                 closeModal();
                 loadTechnicianRequests();
             } else {
@@ -268,7 +333,7 @@ function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.add('hidden');
     });
-    
+
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
     document.getElementById(tabName).classList.remove('hidden');
 }
@@ -277,24 +342,24 @@ async function loadDashboardStats() {
     try {
         const response = await fetch(`${API_BASE_URL}/servicerequests/statistics`);
         const stats = await response.json();
-        
+
         // Обновляем статистику в админ панели
         const adminTotalRequests = document.getElementById('adminTotalRequests');
         if (adminTotalRequests) adminTotalRequests.textContent = stats.totalRequests;
-        
+
         const newRequests = document.getElementById('newRequests');
         if (newRequests) newRequests.textContent = stats.newRequests;
-        
+
         const inProgressRequests = document.getElementById('inProgressRequests');
         if (inProgressRequests) inProgressRequests.textContent = stats.inProgressRequests;
-        
+
         const completedRequests = document.getElementById('completedRequests');
         if (completedRequests) completedRequests.textContent = stats.completedRequests;
-        
+
         // Обновляем статистику на главной странице (секция About)
         const aboutTotalRequests = document.querySelectorAll('#totalRequests');
         aboutTotalRequests.forEach(el => el.textContent = stats.totalRequests);
-        
+
         // Загружаем количество клиентов
         const customersResponse = await fetch(`${API_BASE_URL}/customers`);
         const customers = await customersResponse.json();
@@ -318,7 +383,7 @@ async function loadServiceRequests() {
 function renderServiceRequests() {
     const tbody = document.getElementById('requestsTableBody');
     tbody.innerHTML = '';
-    
+
     currentServiceRequests.forEach(request => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -362,10 +427,10 @@ async function showRequestDetails(id) {
     try {
         const response = await fetch(`${API_BASE_URL}/servicerequests/${id}`);
         const request = await response.json();
-        
+
         const logsResponse = await fetch(`${API_BASE_URL}/worklogs/service-request/${id}`);
         const logs = await logsResponse.json();
-        
+
         const detailsContent = document.getElementById('detailsContent');
         detailsContent.innerHTML = `
             <div class="details-grid">
@@ -420,7 +485,7 @@ async function showRequestDetails(id) {
                 `).join('') : '<p>История пуста</p>'}
             </div>
         `;
-        
+
         document.getElementById('detailsModal').classList.remove('hidden');
     } catch (error) {
         console.error('Ошибка загрузки деталей заявки:', error);
@@ -445,7 +510,7 @@ async function loadCustomers() {
 function renderCustomers() {
     const tbody = document.getElementById('customersTableBody');
     tbody.innerHTML = '';
-    
+
     currentCustomers.forEach(customer => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -479,7 +544,7 @@ async function loadTechnicians() {
 function renderTechnicians() {
     const tbody = document.getElementById('techniciansTableBody');
     tbody.innerHTML = '';
-    
+
     currentTechnicians.forEach(technician => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -541,7 +606,7 @@ function showAddRequestModal() {
             </select>
         </div>
     `;
-    
+
     showModal('Новая заявка', formFields, async (formData) => {
         try {
             const response = await fetch(`${API_BASE_URL}/servicerequests`, {
@@ -558,7 +623,7 @@ function showAddRequestModal() {
                     assignedTechnicianId: formData.assignedTechnicianId ? parseInt(formData.assignedTechnicianId) : null
                 })
             });
-            
+
             if (response.ok) {
                 closeModal();
                 loadServiceRequests();
@@ -576,7 +641,7 @@ function showAddRequestModal() {
 function editServiceRequest(id) {
     const request = currentServiceRequests.find(r => r.id === id);
     if (!request) return;
-    
+
     const formFields = `
         <div class="form-group">
             <label>Клиент:</label>
@@ -629,7 +694,7 @@ function editServiceRequest(id) {
             </select>
         </div>
     `;
-    
+
     showModal('Редактировать заявку', formFields, async (formData) => {
         try {
             const response = await fetch(`${API_BASE_URL}/servicerequests/${id}`, {
@@ -651,7 +716,7 @@ function editServiceRequest(id) {
                     completedAt: formData.status === 'Завершена' ? new Date().toISOString() : request.completedAt
                 })
             });
-            
+
             if (response.ok) {
                 closeModal();
                 loadServiceRequests();
@@ -668,12 +733,12 @@ function editServiceRequest(id) {
 
 async function deleteServiceRequest(id) {
     if (!confirm('Вы уверены, что хотите удалить эту заявку?')) return;
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}/servicerequests/${id}`, {
             method: 'DELETE'
         });
-        
+
         if (response.ok) {
             loadServiceRequests();
             loadDashboardStats();
@@ -701,7 +766,7 @@ function showAddCustomerModal() {
             <input type="email" name="email">
         </div>
     `;
-    
+
     showModal('Новый клиент', formFields, async (formData) => {
         try {
             const response = await fetch(`${API_BASE_URL}/customers`, {
@@ -709,7 +774,7 @@ function showAddCustomerModal() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
-            
+
             if (response.ok) {
                 closeModal();
                 loadCustomers();
@@ -726,7 +791,7 @@ function showAddCustomerModal() {
 function editCustomer(id) {
     const customer = currentCustomers.find(c => c.id === id);
     if (!customer) return;
-    
+
     const formFields = `
         <div class="form-group">
             <label>ФИО:</label>
@@ -741,7 +806,7 @@ function editCustomer(id) {
             <input type="email" name="email" value="${customer.email || ''}">
         </div>
     `;
-    
+
     showModal('Редактировать клиента', formFields, async (formData) => {
         try {
             const response = await fetch(`${API_BASE_URL}/customers/${id}`, {
@@ -753,7 +818,7 @@ function editCustomer(id) {
                     registeredAt: customer.registeredAt
                 })
             });
-            
+
             if (response.ok) {
                 closeModal();
                 loadCustomers();
@@ -769,12 +834,12 @@ function editCustomer(id) {
 
 async function deleteCustomer(id) {
     if (!confirm('Вы уверены, что хотите удалить этого клиента? Это также удалит все его заявки.')) return;
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}/customers/${id}`, {
             method: 'DELETE'
         });
-        
+
         if (response.ok) {
             loadCustomers();
             loadServiceRequests();
@@ -809,7 +874,7 @@ function showAddTechnicianModal() {
             </label>
         </div>
     `;
-    
+
     showModal('Новый техник', formFields, async (formData) => {
         try {
             const response = await fetch(`${API_BASE_URL}/technicians`, {
@@ -822,7 +887,7 @@ function showAddTechnicianModal() {
                     isActive: formData.isActive === 'on'
                 })
             });
-            
+
             if (response.ok) {
                 closeModal();
                 loadTechnicians();
@@ -839,7 +904,7 @@ function showAddTechnicianModal() {
 function editTechnician(id) {
     const technician = currentTechnicians.find(t => t.id === id);
     if (!technician) return;
-    
+
     const formFields = `
         <div class="form-group">
             <label>ФИО:</label>
@@ -860,7 +925,7 @@ function editTechnician(id) {
             </label>
         </div>
     `;
-    
+
     showModal('Редактировать техника', formFields, async (formData) => {
         try {
             const response = await fetch(`${API_BASE_URL}/technicians/${id}`, {
@@ -874,7 +939,7 @@ function editTechnician(id) {
                     isActive: formData.isActive === 'on'
                 })
             });
-            
+
             if (response.ok) {
                 closeModal();
                 loadTechnicians();
@@ -890,12 +955,12 @@ function editTechnician(id) {
 
 async function deleteTechnician(id) {
     if (!confirm('Вы уверены, что хотите удалить этого техника?')) return;
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}/technicians/${id}`, {
             method: 'DELETE'
         });
-        
+
         if (response.ok) {
             loadTechnicians();
             loadServiceRequests();
@@ -911,7 +976,7 @@ async function deleteTechnician(id) {
 function showModal(title, formFieldsHtml, onSubmit) {
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('formFields').innerHTML = formFieldsHtml;
-    
+
     const form = document.getElementById('modalForm');
     form.onsubmit = (e) => {
         e.preventDefault();
@@ -922,7 +987,7 @@ function showModal(title, formFieldsHtml, onSubmit) {
         });
         onSubmit(data);
     };
-    
+
     document.getElementById('modal').classList.remove('hidden');
 }
 

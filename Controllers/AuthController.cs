@@ -35,8 +35,16 @@ namespace ServiceCenter.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterDto model)
         {
+            // Проверяем существование пользователя по email
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
+            {
+                return BadRequest(new { message = "Пользователь с таким email уже существует" });
+            }
+            
+            // Дополнительная проверка по username (тоже email)
+            var existingByUsername = await _userManager.FindByNameAsync(model.Email);
+            if (existingByUsername != null)
             {
                 return BadRequest(new { message = "Пользователь с таким email уже существует" });
             }
@@ -73,6 +81,23 @@ namespace ServiceCenter.Controllers
                 await _context.SaveChangesAsync();
 
                 user.CustomerId = customer.Id;
+                await _userManager.UpdateAsync(user);
+            }
+            
+            // Если роль Technician, создаем запись в таблице Technicians
+            if (model.Role == UserRoles.Technician)
+            {
+                var technician = new Technician
+                {
+                    FullName = model.FullName,
+                    Phone = model.Phone,
+                    Specialization = "Общий специалист", // По умолчанию
+                    IsActive = true
+                };
+                _context.Technicians.Add(technician);
+                await _context.SaveChangesAsync();
+
+                user.TechnicianId = technician.Id;
                 await _userManager.UpdateAsync(user);
             }
 
@@ -152,7 +177,7 @@ namespace ServiceCenter.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email!),
                 new Claim(ClaimTypes.Name, user.FullName),
             };

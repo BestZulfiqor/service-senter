@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace ServiceCenter.Models
 {
-    public class User : IdentityUser
+    public class User : IdentityUser<int>
     {
         public string FullName { get; set; } = string.Empty;
         public int? CustomerId { get; set; }
