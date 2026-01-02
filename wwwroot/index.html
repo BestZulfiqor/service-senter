@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сервисный Центр - Профессиональный ремонт техники</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">🔧 Сервисный Центр</div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link">Главная</a></li>
+                <li><a href="#services" class="nav-link">Услуги</a></li>
+                <li><a href="#about" class="nav-link">О нас</a></li>
+                <li id="dashboardLink" style="display:none;"><a href="#dashboard" class="nav-link">Мои заявки</a></li>
+            </ul>
+            <div id="authButtons" style="display: flex; gap: 10px;">
+                <a href="/auth.html" class="phone-btn" id="loginBtn">Войти</a>
+                <div id="userMenu" style="display:none; align-items: center; gap: 10px;">
+                    <span id="userName" style="color: var(--text-dark);"></span>
+                    <button onclick="logout()" class="phone-btn">Выйти</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Ваш <span class="highlight">доверенный</span><br>авторизованный<br>сервисный центр</h1>
+            <p class="hero-subtitle">Бережно заботимся о ваших устройствах, гарантируем качественный ремонт и внимательное отношение. Используем только оригинальные комплектующие.</p>
+            <div class="hero-features">
+                <div class="feature-badge">✓ Персональный подход к клиентам</div>
+                <div class="feature-badge">✓ Безопасность и приватность данных</div>
+                <div class="feature-badge">✓ 100 дней гарантии на ремонт</div>
+            </div>
+            <button class="cta-button" onclick="scrollToAdmin()">Оставить заявку</button>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+        <div class="container">
+            <h2 class="section-title">Услуги</h2>
+            <p class="section-subtitle">Полный спектр технического обслуживания и ремонта</p>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">💻</div>
+                    <h3>Диагностика и ремонт компьютеров</h3>
+                    <p>Профессиональная диагностика и ремонт любой сложности</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🔧</div>
+                    <h3>Профилактическое обслуживание</h3>
+                    <p>Регулярное обслуживание для продления срока службы</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">💾</div>
+                    <h3>Установка и обновление ПО</h3>
+                    <p>Установка операционных систем и программного обеспечения</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">✅</div>
+                    <h3>Гарантийное обслуживание</h3>
+                    <p>Полное гарантийное сопровождение всех работ</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🖨️</div>
+                    <h3>Ремонт принтеров и сканеров</h3>
+                    <p>Восстановление работоспособности офисной техники</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🔩</div>
+                    <h3>Замена комплектующих</h3>
+                    <p>Использование только оригинальных запчастей</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">📞</div>
+                    <h3>Телефонная поддержка</h3>
+                    <p>Круглосуточная консультация специалистов</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">📱</div>
+                    <h3>Ремонт смартфонов</h3>
+                    <p>Быстрый и качественный ремонт мобильных устройств</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title">О нас</h2>
+            <div class="about-content">
+                <p>Мы — надежный сервисный центр по ремонту компьютерных устройств. Предоставляем услуги для частных лиц и бизнеса. Гарантируем качество в течение 100 дней после ремонта, демонстрируя наше отношение к сервису и людям, с которыми мы работаем.</p>
+                <div class="about-stats">
+                    <div class="stat-item">
+                        <h3 id="totalRequests">0</h3>
+                        <p>Выполненных заявок</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 id="totalCustomers">0</h3>
+                        <p>Довольных клиентов</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>100</h3>
+                        <p>Дней гарантии</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Client/Technician Dashboard -->
+    <section id="dashboard" class="admin-section" style="display:none;">
+        <div class="container">
+            <h2 class="section-title" id="dashboardTitle">Мои заявки</h2>
+            <div id="clientDashboard" style="display:none;">
+                <div class="section-header">
+                    <h3>Список моих заявок</h3>
+                    <button class="btn btn-primary" onclick="showCreateRequestForClient()">+ Новая заявка</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Устройство</th>
+                                <th>Проблема</th>
+                                <th>Статус</th>
+                                <th>Техник</th>
+                                <th>Стоимость</th>
+                                <th>Дата</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientRequestsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="technicianDashboard" style="display:none;">
+                <div class="section-header">
+                    <h3>Назначенные мне заявки</h3>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Клиент</th>
+                                <th>Устройство</th>
+                                <th>Проблема</th>
+                                <th>Статус</th>
+                                <th>Стоимость</th>
+                                <th>Дата</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="technicianRequestsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Panel Section -->
+    <section id="admin" class="admin-section" style="display:none;">
+        <div class="container">
+
+            <h2 class="section-title">Панель администратора</h2>
+            <div class="dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <h3 id="adminTotalRequests">0</h3>
+                            <p>Всего заявок</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🆕</div>
+                        <div class="stat-content">
+                            <h3 id="newRequests">0</h3>
+                            <p>Новые</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚙️</div>
+                        <div class="stat-content">
+                            <h3 id="inProgressRequests">0</h3>
+                            <p>В работе</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <h3 id="completedRequests">0</h3>
+                            <p>Завершено</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="requests">Заявки</button>
+            <button class="tab-btn" data-tab="customers">Клиенты</button>
+            <button class="tab-btn" data-tab="technicians">Техники</button>
+        </nav>
+
+        <div class="tab-content" id="requests">
+            <div class="section-header">
+                <h2>Заявки на ремонт</h2>
+                <button class="btn btn-primary" onclick="showAddRequestModal()">+ Новая заявка</button>
+            </div>
+            <div class="table-container">
+                <table id="requestsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Клиент</th>
+                            <th>Устройство</th>
+                            <th>Проблема</th>
+                            <th>Статус</th>
+                            <th>Техник</th>
+                            <th>Стоимость</th>
+                            <th>Дата</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content hidden" id="customers">
+            <div class="section-header">
+                <h2>Клиенты</h2>
+                <button class="btn btn-primary" onclick="showAddCustomerModal()">+ Новый клиент</button>
+            </div>
+            <div class="table-container">
+                <table id="customersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ФИО</th>
+                            <th>Телефон</th>
+                            <th>Email</th>
+                            <th>Дата регистрации</th>
+                            <th>Заявок</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content hidden" id="technicians">
+            <div class="section-header">
+                <h2>Техники</h2>
+                <button class="btn btn-primary" onclick="showAddTechnicianModal()">+ Новый техник</button>
+            </div>
+            <div class="table-container">
+                <table id="techniciansTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ФИО</th>
+                            <th>Телефон</th>
+                            <th>Специализация</th>
+                            <th>Статус</th>
+                            <th>Заявок</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="techniciansTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>🔧 Сервисный Центр</h3>
+                    <p>Профессиональный ремонт и обслуживание техники</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Контакты</h4>
+                    <p>📞 +992 44 600-11-77</p>
+                    <p>📧 info@servicecentr.tj</p>
+                </div>
+                <div class="footer-section">
+                    <h4>График работы</h4>
+                    <p>Пн-Пт: 9:00 - 18:00</p>
+                    <p>Сб-Вс: 10:00 - 16:00</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Сервисный Центр. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Форма</h2>
+            <form id="modalForm">
+                <div id="formFields"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="detailsModal" class="modal hidden">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="closeDetailsModal()">&times;</span>
+            <h2>Детали заявки</h2>
+            <div id="detailsContent"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeDetailsModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div id="chatModal" class="chat-modal hidden">
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-header">
+                <h3 id="chatHeaderTitle">💬 Чат</h3>
+                <button class="chat-close" onclick="toggleChatModal()">&times;</button>
+            </div>
+            
+            <!-- User List (Admin Only) -->
+            <div id="chatUserList" class="chat-user-list hidden">
+                <div class="chat-search">
+                    <input type="text" id="userSearchInput" placeholder="Поиск пользователей..." onkeyup="searchUsers()">
+                </div>
+                <div id="userListContainer" class="user-list">
+                    <!-- Users will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Messages Area -->
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-welcome">
+                    <p>Выберите пользователя для начала чата</p>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <input type="text" id="chatInput" placeholder="Введите сообщение..." onkeypress="handleChatKeyPress(event)" disabled>
+                <button class="chat-send-btn" onclick="sendChatMessage()" disabled>Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Button (Floating) -->
+    <button id="chatButton" class="chat-button hidden" onclick="toggleChatModal()">
+        💬
+        <span id="chatBadge" class="chat-badge hidden">0</span>
+    </button>
+
+    <!-- Admin Notification Button -->
+    <button id="notificationButton" class="notification-button hidden" onclick="toggleNotificationDropdown()">
+        🔔
+        <span id="notificationBadge" class="notification-badge hidden">0</span>
+    </button>
+
+    <!-- Notification Dropdown -->
+    <div id="notificationDropdown" class="notification-dropdown hidden">
+        <div class="notification-header">
+            <h4>📨 Сообщения от клиентов</h4>
+            <button class="notification-close" onclick="closeNotificationDropdown()">&times;</button>
+        </div>
+        <div id="notificationList" class="notification-list">
+            <!-- Notifications will be loaded here -->
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+    <script src="chat.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Временное решение - функция для создания заявки клиента
+        function showCreateRequestForClient() {
+            const customerId = localStorage.getItem('customerId');
+            if (!customerId) {
+                alert('Ошибка: не удалось определить ID клиента');
+                return;
+            }
+            
+            const formFields = `
+                <div class="form-group">
+                    <label>Тип устройства:</label>
+                    <input type="text" name="deviceType" required placeholder="Например: Ноутбук, Телефон">
+                </div>
+                <div class="form-group">
+                    <label>Бренд:</label>
+                    <input type="text" name="deviceBrand" required placeholder="Например: Apple, Samsung">
+                </div>
+                <div class="form-group">
+                    <label>Модель:</label>
+                    <input type="text" name="deviceModel" required placeholder="Например: iPhone 13, Galaxy S21">
+                </div>
+                <div class="form-group">
+                    <label>Серийный номер:</label>
+                    <input type="text" name="serialNumber" placeholder="Если известен">
+                </div>
+                <div class="form-group">
+                    <label>Описание проблемы:</label>
+                    <textarea name="problemDescription" required placeholder="Опишите подробно проблему с устройством"></textarea>
+                </div>
+            `;
+            
+            showModal('Новая заявка на ремонт', formFields, async (formData) => {
+                try {
+                    const response = await fetch('/api/servicerequests', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: JSON.stringify({
+                            customerId: parseInt(customerId),
+                            deviceType: formData.deviceType,
+                            deviceBrand: formData.deviceBrand,
+                            deviceModel: formData.deviceModel,
+                            serialNumber: formData.serialNumber || '',
+                            problemDescription: formData.problemDescription,
+                            status: 'Новая',
+                            estimatedCost: null,
+                            assignedTechnicianId: null
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        closeModal();
+                        if (typeof loadClientRequests === 'function') {
+                            loadClientRequests();
+                        }
+                        alert('Заявка успешно создана!');
+                    } else {
+                        const error = await response.json();
+                        alert('Ошибка создания заявки: ' + (error.message || 'Неизвестная ошибка'));
+                    }
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    alert('Ошибка создания заявки');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
