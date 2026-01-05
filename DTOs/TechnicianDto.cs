@@ -8,6 +8,13 @@ namespace ServiceCenter.DTOs
         public string FullName { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public string Specialization { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public List<ServiceRequestSimpleDto> ServiceRequests { get; set; } = new List<ServiceRequestSimpleDto>();
+    }
+
+    public class ServiceRequestSimpleDto
+    {
+        public int Id { get; set; }
     }
 
     public class CreateTechnicianDto

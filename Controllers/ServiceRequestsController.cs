@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using ServiceCenter.Data;
 using ServiceCenter.Models;
@@ -37,6 +38,7 @@ namespace ServiceCenter.Controllers
                 .Include(sr => sr.Customer)
                 .Include(sr => sr.AssignedTechnician)
                 .Include(sr => sr.WorkLogs)
+                .Include(sr => sr.Receipt)
                 .OrderByDescending(sr => sr.CreatedAt)
                 .ToListAsync();
 
@@ -57,7 +59,20 @@ namespace ServiceCenter.Controllers
                 CreatedAt = sr.CreatedAt,
                 CompletedAt = sr.CompletedAt,
                 AssignedTechnicianId = sr.AssignedTechnicianId,
-                AssignedTechnicianName = sr.AssignedTechnician?.FullName
+                AssignedTechnicianName = sr.AssignedTechnician?.FullName,
+                HasReceipt = sr.Receipt != null,
+                Receipt = sr.Receipt != null ? new ReceiptDto
+                {
+                    Id = sr.Receipt.Id,
+                    ReceiptNumber = sr.Receipt.ReceiptNumber,
+                    TotalAmount = sr.Receipt.TotalAmount,
+                    ServicesDescription = sr.Receipt.ServicesDescription,
+                    IssuedAt = sr.Receipt.IssuedAt,
+                    IsPaid = sr.Receipt.IsPaid,
+                    PaidAt = sr.Receipt.PaidAt,
+                    PaymentMethod = sr.Receipt.PaymentMethod,
+                    Notes = sr.Receipt.Notes
+                } : null
             });
 
             return Ok(requestDtos);
@@ -80,6 +95,7 @@ namespace ServiceCenter.Controllers
                 .Include(sr => sr.Customer)
                 .Include(sr => sr.AssignedTechnician)
                 .Include(sr => sr.WorkLogs)
+                .Include(sr => sr.Receipt)
                 .FirstOrDefaultAsync(sr => sr.Id == id);
 
             if (serviceRequest == null)
@@ -104,7 +120,20 @@ namespace ServiceCenter.Controllers
                 CreatedAt = serviceRequest.CreatedAt,
                 CompletedAt = serviceRequest.CompletedAt,
                 AssignedTechnicianId = serviceRequest.AssignedTechnicianId,
-                AssignedTechnicianName = serviceRequest.AssignedTechnician?.FullName
+                AssignedTechnicianName = serviceRequest.AssignedTechnician?.FullName,
+                HasReceipt = serviceRequest.Receipt != null,
+                Receipt = serviceRequest.Receipt != null ? new ReceiptDto
+                {
+                    Id = serviceRequest.Receipt.Id,
+                    ReceiptNumber = serviceRequest.Receipt.ReceiptNumber,
+                    TotalAmount = serviceRequest.Receipt.TotalAmount,
+                    ServicesDescription = serviceRequest.Receipt.ServicesDescription,
+                    IssuedAt = serviceRequest.Receipt.IssuedAt,
+                    IsPaid = serviceRequest.Receipt.IsPaid,
+                    PaidAt = serviceRequest.Receipt.PaidAt,
+                    PaymentMethod = serviceRequest.Receipt.PaymentMethod,
+                    Notes = serviceRequest.Receipt.Notes
+                } : null
             };
 
             return Ok(requestDto);
@@ -157,6 +186,13 @@ namespace ServiceCenter.Controllers
             if (!await _context.Customers.AnyAsync(c => c.Id == requestDto.CustomerId))
             {
                 return BadRequest(new { message = "Клиент не найден" });
+            }
+
+            // Проверяем существование техника, если он указан
+            if (requestDto.AssignedTechnicianId.HasValue && 
+                !await _context.Technicians.AnyAsync(t => t.Id == requestDto.AssignedTechnicianId.Value))
+            {
+                return BadRequest(new { message = "Техник не найден" });
             }
 
             var serviceRequest = new ServiceRequest

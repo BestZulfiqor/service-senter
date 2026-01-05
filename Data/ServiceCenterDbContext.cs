@@ -17,6 +17,8 @@ namespace ServiceCenter.Data
         public DbSet<Technician> Technicians { get; set; }
         public DbSet<WorkLog> WorkLogs { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<Receipt> Receipts { get; set; }
+        public DbSet<FinancialTransaction> FinancialTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -89,6 +91,51 @@ namespace ServiceCenter.Data
                     .WithMany()
                     .HasForeignKey(e => e.ReceiverId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Receipt>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ReceiptNumber).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.ServicesDescription).IsRequired().HasMaxLength(1000);
+                entity.Property(e => e.PaymentMethod).HasMaxLength(50);
+
+                entity.HasOne(e => e.ServiceRequest)
+                    .WithOne(sr => sr.Receipt)
+                    .HasForeignKey<Receipt>(e => e.ServiceRequestId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Customer)
+                    .WithMany()
+                    .HasForeignKey(e => e.CustomerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Technician)
+                    .WithMany()
+                    .HasForeignKey(e => e.TechnicianId)
+                    .OnDelete(DeleteBehavior.SetNull)
+                    .IsRequired(false);
+            });
+
+            modelBuilder.Entity<FinancialTransaction>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Type).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Amount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.PaymentMethod).HasMaxLength(50);
+
+                entity.HasOne(e => e.ServiceRequest)
+                    .WithMany()
+                    .HasForeignKey(e => e.ServiceRequestId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.Receipt)
+                    .WithMany()
+                    .HasForeignKey(e => e.ReceiptId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
         }
     }

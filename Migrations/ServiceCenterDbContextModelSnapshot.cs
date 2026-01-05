@@ -190,6 +190,123 @@ namespace ServiceCenter.Migrations
                     b.ToTable("Customers");
                 });
 
+            modelBuilder.Entity("ServiceCenter.Models.FinancialTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("ReceiptId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ServiceRequestId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiptId");
+
+                    b.HasIndex("ServiceRequestId");
+
+                    b.ToTable("FinancialTransactions");
+                });
+
+            modelBuilder.Entity("ServiceCenter.Models.Receipt", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("IssuedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ReceiptNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("ServiceRequestId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ServicesDescription")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int?>("TechnicianId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ServiceRequestId")
+                        .IsUnique();
+
+                    b.HasIndex("TechnicianId");
+
+                    b.ToTable("Receipts");
+                });
+
             modelBuilder.Entity("ServiceCenter.Models.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -497,6 +614,49 @@ namespace ServiceCenter.Migrations
                     b.Navigation("Sender");
                 });
 
+            modelBuilder.Entity("ServiceCenter.Models.FinancialTransaction", b =>
+                {
+                    b.HasOne("ServiceCenter.Models.Receipt", "Receipt")
+                        .WithMany()
+                        .HasForeignKey("ReceiptId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ServiceCenter.Models.ServiceRequest", "ServiceRequest")
+                        .WithMany()
+                        .HasForeignKey("ServiceRequestId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Receipt");
+
+                    b.Navigation("ServiceRequest");
+                });
+
+            modelBuilder.Entity("ServiceCenter.Models.Receipt", b =>
+                {
+                    b.HasOne("ServiceCenter.Models.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ServiceCenter.Models.ServiceRequest", "ServiceRequest")
+                        .WithOne("Receipt")
+                        .HasForeignKey("ServiceCenter.Models.Receipt", "ServiceRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ServiceCenter.Models.Technician", "Technician")
+                        .WithMany()
+                        .HasForeignKey("TechnicianId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("ServiceRequest");
+
+                    b.Navigation("Technician");
+                });
+
             modelBuilder.Entity("ServiceCenter.Models.ServiceRequest", b =>
                 {
                     b.HasOne("ServiceCenter.Models.Technician", "AssignedTechnician")
@@ -548,6 +708,8 @@ namespace ServiceCenter.Migrations
 
             modelBuilder.Entity("ServiceCenter.Models.ServiceRequest", b =>
                 {
+                    b.Navigation("Receipt");
+
                     b.Navigation("WorkLogs");
                 });
 

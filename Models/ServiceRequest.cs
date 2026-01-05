@@ -18,5 +18,6 @@ namespace ServiceCenter.Models
         public int? AssignedTechnicianId { get; set; }
         public Technician? AssignedTechnician { get; set; }
         public ICollection<WorkLog> WorkLogs { get; set; } = new List<WorkLog>();
+        public Receipt? Receipt { get; set; }
     }
 }

@@ -172,6 +172,84 @@ public class ChatHub : Hub
         }
     }
 
+    public async Task PromoteToTechnician(int userId)
+    {
+        // Только админ может повышать пользователей до техников
+        if (!Context.User.IsInRole(UserRoles.Admin))
+        {
+            throw new HubException("Access denied. Only admins can promote users to technicians.");
+        }
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+        {
+            throw new HubException("User not found");
+        }
+
+        // Проверяем, что пользователь является клиентом
+        if (!await _userManager.IsInRoleAsync(user, UserRoles.Client))
+        {
+            throw new HubException("User must be a client to be promoted to technician");
+        }
+
+        // Удаляем роль клиента
+        await _userManager.RemoveFromRoleAsync(user, UserRoles.Client);
+        
+        // Добавляем роль техника
+        await _userManager.AddToRoleAsync(user, UserRoles.Technician);
+
+        // Удаляем запись клиента, если она существует
+        if (user.CustomerId.HasValue)
+        {
+            var customer = await _context.Customers.FindAsync(user.CustomerId.Value);
+            if (customer != null)
+            {
+                _context.Customers.Remove(customer);
+                await _context.SaveChangesAsync();
+            }
+            user.CustomerId = null;
+        }
+
+        // Создаем запись в таблице Technicians
+        var technician = new Technician
+        {
+            FullName = user.FullName,
+            Phone = user.PhoneNumber ?? "",
+            Specialization = "Общий специалист",
+            IsActive = true
+        };
+        _context.Technicians.Add(technician);
+        await _context.SaveChangesAsync();
+
+        // Обновляем пользователя
+        user.TechnicianId = technician.Id;
+        await _userManager.UpdateAsync(user);
+
+        // Уведомляем всех админов об изменении роли
+        await NotifyAdminsAboutRoleChange(userId, "Technician", user.UserName ?? user.Email);
+    }
+
+    private async Task NotifyAdminsAboutRoleChange(int userId, string newRole, string userName)
+    {
+        var adminUsers = await _context.UserRoles
+            .Where(ur => _context.Roles.Any(r => r.Id == ur.RoleId && r.Name == UserRoles.Admin))
+            .Select(ur => ur.UserId)
+            .ToListAsync();
+
+        foreach (var adminId in adminUsers)
+        {
+            if (_onlineUsers.TryGetValue(adminId, out string? connectionId))
+            {
+                await Clients.Client(connectionId).SendAsync("UserRoleChanged", new
+                {
+                    userId = userId,
+                    userName = userName,
+                    newRole = newRole
+                });
+            }
+        }
+    }
+
     private async Task UpdateAdminUserList()
     {
         // Get all users who have sent messages to admins or received messages from admins

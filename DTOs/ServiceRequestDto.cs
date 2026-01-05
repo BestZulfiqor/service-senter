@@ -20,6 +20,8 @@ namespace ServiceCenter.DTOs
         public DateTime? CompletedAt { get; set; }
         public int? AssignedTechnicianId { get; set; }
         public string? AssignedTechnicianName { get; set; }
+        public bool HasReceipt { get; set; }
+        public ReceiptDto? Receipt { get; set; }
     }
 
     public class CreateServiceRequestDto
@@ -95,5 +97,21 @@ namespace ServiceCenter.DTOs
         public int InProgressRequests { get; set; }
         public int CompletedRequests { get; set; }
         public decimal TotalRevenue { get; set; }
+    }
+
+    public class ReceiptDto
+    {
+        public int Id { get; set; }
+        public string ReceiptNumber { get; set; } = string.Empty;
+        public decimal TotalAmount { get; set; }
+        public string ServicesDescription { get; set; } = string.Empty;
+        public DateTime IssuedAt { get; set; }
+        public bool IsPaid { get; set; }
+        public DateTime? PaidAt { get; set; }
+        public string PaymentMethod { get; set; } = string.Empty;
+        public string Notes { get; set; } = string.Empty;
+        public int ServiceRequestId { get; set; }
+        public int CustomerId { get; set; }
+        public int? TechnicianId { get; set; }
     }
 }

@@ -69,7 +69,6 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     const email = document.getElementById('registerEmail').value;
     const phone = document.getElementById('registerPhone').value;
     const password = document.getElementById('registerPassword').value;
-    const role = document.getElementById('registerRole').value;
     
     const errorDiv = document.getElementById('registerError');
     const successDiv = document.getElementById('registerSuccess');
@@ -83,7 +82,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ fullName, email, phone, password, role })
+            body: JSON.stringify({ fullName, email, phone, password })
         });
         
         if (response.ok) {

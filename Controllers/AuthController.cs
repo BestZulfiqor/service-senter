@@ -64,42 +64,22 @@ namespace ServiceCenter.Controllers
                 return BadRequest(new { message = "Ошибка создания пользователя", errors = result.Errors });
             }
 
-            // Назначаем роль
-            await _userManager.AddToRoleAsync(user, model.Role);
+            // Назначаем роль Client всем новым пользователям
+            await _userManager.AddToRoleAsync(user, UserRoles.Client);
 
-            // Если роль Client, создаем запись в таблице Customers
-            if (model.Role == UserRoles.Client)
+            // Создаем запись в таблице Customers
+            var customer = new Customer
             {
-                var customer = new Customer
-                {
-                    FullName = model.FullName,
-                    Phone = model.Phone,
-                    Email = model.Email,
-                    RegisteredAt = DateTime.UtcNow
-                };
-                _context.Customers.Add(customer);
-                await _context.SaveChangesAsync();
+                FullName = model.FullName,
+                Phone = model.Phone,
+                Email = model.Email,
+                RegisteredAt = DateTime.UtcNow
+            };
+            _context.Customers.Add(customer);
+            await _context.SaveChangesAsync();
 
-                user.CustomerId = customer.Id;
-                await _userManager.UpdateAsync(user);
-            }
-            
-            // Если роль Technician, создаем запись в таблице Technicians
-            if (model.Role == UserRoles.Technician)
-            {
-                var technician = new Technician
-                {
-                    FullName = model.FullName,
-                    Phone = model.Phone,
-                    Specialization = "Общий специалист", // По умолчанию
-                    IsActive = true
-                };
-                _context.Technicians.Add(technician);
-                await _context.SaveChangesAsync();
-
-                user.TechnicianId = technician.Id;
-                await _userManager.UpdateAsync(user);
-            }
+            user.CustomerId = customer.Id;
+            await _userManager.UpdateAsync(user);
 
             var token = await GenerateJwtToken(user);
             var roles = await _userManager.GetRolesAsync(user);

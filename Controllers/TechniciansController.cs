@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using ServiceCenter.Data;
 using ServiceCenter.Models;
@@ -12,6 +13,7 @@ namespace ServiceCenter.Controllers
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     [Produces("application/json")]
     [SwaggerTag("Операции для управления техниками сервисного центра")]
     public class TechniciansController : ControllerBase
@@ -42,7 +44,9 @@ namespace ServiceCenter.Controllers
                 Id = t.Id,
                 FullName = t.FullName,
                 Phone = t.Phone,
-                Specialization = t.Specialization
+                Specialization = t.Specialization,
+                IsActive = t.IsActive,
+                ServiceRequests = t.ServiceRequests.Select(sr => new ServiceRequestSimpleDto { Id = sr.Id }).ToList()
             });
 
             return Ok(technicianDtos);
@@ -98,7 +102,8 @@ namespace ServiceCenter.Controllers
             {
                 FullName = technicianDto.FullName,
                 Phone = technicianDto.Phone,
-                Specialization = technicianDto.Specialization
+                Specialization = technicianDto.Specialization,
+                IsActive = true
             };
 
             _context.Technicians.Add(technician);

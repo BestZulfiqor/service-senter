@@ -27,9 +27,6 @@ namespace ServiceCenter.DTOs
 
         [Phone(ErrorMessage = "Неверный формат телефона")]
         public string Phone { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Роль обязательна")]
-        public string Role { get; set; } = "Client";
     }
 
     public class AuthResponseDto

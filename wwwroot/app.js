@@ -4,6 +4,7 @@ let currentCustomers = [];
 let currentTechnicians = [];
 let currentServiceRequests = [];
 let currentUser = null;
+let currentUsers = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
@@ -16,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeTab === 'requests') loadServiceRequests();
         else if (activeTab === 'customers') loadCustomers();
         else if (activeTab === 'technicians') loadTechnicians();
+        else if (activeTab === 'users') loadUsers();
     }, 30000);
 });
 
@@ -53,6 +55,7 @@ function showInterfaceByRole(role) {
         loadServiceRequests();
         loadCustomers();
         loadTechnicians();
+        loadUsers();
     } else if (role === 'Client') {
         // Клиент - показываем его заявки
         document.getElementById('dashboardLink').style.display = 'block';
@@ -399,6 +402,12 @@ function renderServiceRequests() {
                 <div class="action-buttons">
                     <button class="btn btn-info" onclick="showRequestDetails(${request.id})">Детали</button>
                     <button class="btn btn-edit" onclick="editServiceRequest(${request.id})">Изменить</button>
+                    ${request.status === 'Завершена' && !request.hasReceipt ? 
+                        `<button class="btn btn-success" onclick="generateReceipt(${request.id})">🧾 Чек</button>` : 
+                        request.hasReceipt ? 
+                        `<span class="status-badge status-completed">Чек есть</span>` : 
+                        ''
+                    }
                     <button class="btn btn-danger" onclick="deleteServiceRequest(${request.id})">Удалить</button>
                 </div>
             </td>
@@ -533,9 +542,15 @@ function renderCustomers() {
 
 async function loadTechnicians() {
     try {
-        const response = await fetch(`${API_BASE_URL}/technicians`);
-        currentTechnicians = await response.json();
-        renderTechnicians();
+        const response = await fetch(`${API_BASE_URL}/technicians`, {
+            headers: getAuthHeaders()
+        });
+        if (response.ok) {
+            currentTechnicians = await response.json();
+            renderTechnicians();
+        } else {
+            console.error('Ошибка загрузки техников:', response.status);
+        }
     } catch (error) {
         console.error('Ошибка загрузки техников:', error);
     }
@@ -552,7 +567,7 @@ function renderTechnicians() {
             <td>${technician.fullName}</td>
             <td>${technician.phone}</td>
             <td>${technician.specialization}</td>
-            <td><span class="status-badge ${technician.isActive ? 'status-completed' : 'status-cancelled'}">${technician.isActive ? 'Активен' : 'Неактивен'}</span></td>
+            <td><span class="status-badge ${technician.IsActive ? 'status-completed' : 'status-cancelled'}">${technician.IsActive ? 'Активен' : 'Неактивен'}</span></td>
             <td>${technician.serviceRequests?.length || 0}</td>
             <td>
                 <div class="action-buttons">
@@ -602,7 +617,7 @@ function showAddRequestModal() {
             <label>Техник:</label>
             <select name="assignedTechnicianId">
                 <option value="">Не назначен</option>
-                ${currentTechnicians.filter(t => t.isActive).map(t => `<option value="${t.id}">${t.fullName}</option>`).join('')}
+                ${currentTechnicians.filter(t => t.IsActive).map(t => `<option value="${t.id}">${t.fullName}</option>`).join('')}
             </select>
         </div>
     `;
@@ -611,7 +626,7 @@ function showAddRequestModal() {
         try {
             const response = await fetch(`${API_BASE_URL}/servicerequests`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({
                     customerId: parseInt(formData.customerId),
                     deviceType: formData.deviceType,
@@ -993,4 +1008,155 @@ function showModal(title, formFieldsHtml, onSubmit) {
 
 function closeModal() {
     document.getElementById('modal').classList.add('hidden');
+}
+
+// Управление пользователями и ролями
+async function loadUsers() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/users`, {
+            headers: getAuthHeaders()
+        });
+        currentUsers = await response.json();
+        renderUsers();
+    } catch (error) {
+        console.error('Ошибка загрузки пользователей:', error);
+    }
+}
+
+function renderUsers() {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+
+    currentUsers.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${user.id}</td>
+            <td>${user.email}</td>
+            <td>${user.fullName}</td>
+            <td>${user.phoneNumber || '-'}</td>
+            <td>
+                <span class="status-badge ${getRoleBadgeClass(user.roles[0])}">${user.roles[0]}</span>
+            </td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn btn-edit" onclick="changeUserRole(${user.id}, '${user.roles[0]}')">Изменить роль</button>
+                    ${user.roles[0] !== 'Admin' ? `<button class="btn btn-danger" onclick="deleteUser(${user.id})">Удалить</button>` : ''}
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function getRoleBadgeClass(role) {
+    const roleClasses = {
+        'Admin': 'status-completed',
+        'Technician': 'status-progress',
+        'Client': 'status-new'
+    };
+    return roleClasses[role] || 'status-new';
+}
+
+function changeUserRole(userId, currentRole) {
+    const roles = ['Client', 'Technician', 'Admin'];
+    const availableRoles = roles.filter(r => r !== currentRole);
+    
+    const formFields = `
+        <div class="form-group">
+            <label>Текущая роль:</label>
+            <input type="text" value="${currentRole}" disabled style="background: #f5f5f5;">
+        </div>
+        <div class="form-group">
+            <label>Новая роль:</label>
+            <select name="newRole" required>
+                <option value="">Выберите роль</option>
+                ${availableRoles.map(role => `<option value="${role}">${role}</option>`).join('')}
+            </select>
+        </div>
+    `;
+
+    showModal('Изменить роль пользователя', formFields, async (formData) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/change-role`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ newRole: formData.newRole })
+            });
+
+            if (response.ok) {
+                closeModal();
+                loadUsers();
+                loadCustomers();
+                loadTechnicians();
+                alert('Роль пользователя успешно изменена!\n\nПользователь должен будет перезайти в систему для применения изменений.');
+            } else {
+                const error = await response.json();
+                alert('Ошибка изменения роли: ' + (error.message || 'Неизвестная ошибка'));
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert('Ошибка изменения роли');
+        }
+    });
+}
+
+async function deleteUser(userId) {
+    if (!confirm('Вы уверены, что хотите удалить этого пользователя?')) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            loadUsers();
+            loadCustomers();
+            loadTechnicians();
+            loadServiceRequests();
+            alert('Пользователь успешно удален!');
+        } else {
+            const error = await response.json();
+            alert('Ошибка удаления: ' + (error.message || 'Неизвестная ошибка'));
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Ошибка удаления пользователя');
+    }
+}
+
+// Управление чеками
+async function generateReceipt(serviceRequestId) {
+    if (!confirm('Вы уверены, что хотите сгенерировать чек для этой заявки?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/receipts/generate/${serviceRequestId}`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            const receipt = await response.json();
+            loadServiceRequests();
+            
+            // Показываем информацию о сгенерированном чеке
+            alert(`Чек успешно сгенерирован!\n\nНомер: ${receipt.receiptNumber}\nСумма: ${receipt.totalAmount} ₽\nОписание: ${receipt.servicesDescription}`);
+        } else {
+            let errorMessage = 'Неизвестная ошибка';
+            try {
+                const error = await response.json();
+                errorMessage = error.message || error.title || 'Ошибка сервера';
+            } catch (e) {
+                errorMessage = `Ошибка ${response.status}: ${response.statusText}`;
+            }
+            alert('Ошибка генерации чека: ' + errorMessage);
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Ошибка генерации чека');
+    }
 }
