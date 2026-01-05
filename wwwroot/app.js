@@ -3,6 +3,7 @@ const API_BASE_URL = '/api';
 let currentCustomers = [];
 let currentTechnicians = [];
 let currentServiceRequests = [];
+let currentTransactions = [];
 let currentUser = null;
 let currentUsers = [];
 
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (activeTab === 'customers') loadCustomers();
         else if (activeTab === 'technicians') loadTechnicians();
         else if (activeTab === 'users') loadUsers();
+        else if (activeTab === 'financial') loadTransactions();
     }, 30000);
 });
 
@@ -1158,5 +1160,189 @@ async function generateReceipt(serviceRequestId) {
     } catch (error) {
         console.error('Ошибка:', error);
         alert('Ошибка генерации чека');
+    }
+}
+
+// Финансовые функции
+async function loadTransactions() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/financial/transactions`, {
+            headers: getAuthHeaders()
+        });
+        if (response.ok) {
+            currentTransactions = await response.json();
+            renderTransactions();
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки транзакций:', error);
+    }
+}
+
+function renderTransactions() {
+    const tbody = document.getElementById('transactionsTableBody');
+    tbody.innerHTML = '';
+
+    currentTransactions.forEach(transaction => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${formatDate(transaction.transactionDate)}</td>
+            <td><span class="status-badge ${transaction.type === 'Income' ? 'status-completed' : 'status-cancelled'}">${transaction.type === 'Income' ? 'Доход' : 'Расход'}</span></td>
+            <td>${transaction.category}</td>
+            <td>${transaction.description}</td>
+            <td>${transaction.amount} ₽</td>
+            <td>${transaction.paymentMethod}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn btn-danger" onclick="deleteTransaction(${transaction.id})">Удалить</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+async function generateFinancialReport() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    if (!startDate || !endDate) {
+        alert('Пожалуйста, выберите даты начала и конца периода');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/financial/report?startDate=${startDate}&endDate=${endDate}`, {
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            const report = await response.json();
+            displayFinancialReport(report);
+        } else {
+            alert('Ошибка загрузки отчета');
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Ошибка загрузки отчета');
+    }
+}
+
+function displayFinancialReport(report) {
+    document.getElementById('totalIncome').textContent = report.totalIncome + ' ₽';
+    document.getElementById('totalExpenses').textContent = report.totalExpenses + ' ₽';
+    document.getElementById('netProfit').textContent = (report.totalIncome - report.totalExpenses) + ' ₽';
+
+    // Отображение категорий доходов
+    const incomeCategories = document.getElementById('incomeCategories');
+    incomeCategories.innerHTML = '';
+    report.incomeByCategory.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = 'category-item';
+        div.innerHTML = `
+            <span>${cat.category}: ${cat.amount} ₽ (${cat.percentage.toFixed(1)}%)</span>
+            <small>${cat.transactionCount} транзакций</small>
+        `;
+        incomeCategories.appendChild(div);
+    });
+
+    // Отображение категорий расходов
+    const expenseCategories = document.getElementById('expenseCategories');
+    expenseCategories.innerHTML = '';
+    report.expensesByCategory.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = 'category-item';
+        div.innerHTML = `
+            <span>${cat.category}: ${cat.amount} ₽ (${cat.percentage.toFixed(1)}%)</span>
+            <small>${cat.transactionCount} транзакций</small>
+        `;
+        expenseCategories.appendChild(div);
+    });
+}
+
+function showAddTransactionModal() {
+    const formFields = `
+        <div class="form-group">
+            <label>Тип:</label>
+            <select name="type" required>
+                <option value="Income">Доход</option>
+                <option value="Expense">Расход</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Категория:</label>
+            <select name="category" required>
+                <option value="Service">Услуга</option>
+                <option value="Parts">Запчасти</option>
+                <option value="Rent">Аренда</option>
+                <option value="Utilities">Коммунальные услуги</option>
+                <option value="Salary">Зарплата</option>
+                <option value="Other">Другое</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Сумма:</label>
+            <input type="number" name="amount" step="0.01" required>
+        </div>
+        <div class="form-group">
+            <label>Описание:</label>
+            <textarea name="description" required></textarea>
+        </div>
+        <div class="form-group">
+            <label>Способ оплаты:</label>
+            <select name="paymentMethod" required>
+                <option value="Наличные">Наличные</option>
+                <option value="Карта">Карта</option>
+                <option value="Перевод">Перевод</option>
+            </select>
+        </div>
+    `;
+
+    showModal('Добавить транзакцию', formFields, async (formData) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/financial/transaction`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    type: formData.type,
+                    category: formData.category,
+                    amount: parseFloat(formData.amount),
+                    description: formData.description,
+                    paymentMethod: formData.paymentMethod
+                })
+            });
+
+            if (response.ok) {
+                closeModal();
+                loadTransactions();
+                alert('Транзакция успешно добавлена!');
+            } else {
+                const error = await response.json();
+                alert('Ошибка добавления транзакции: ' + (error.message || 'Неизвестная ошибка'));
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert('Ошибка добавления транзакции');
+        }
+    });
+}
+
+async function deleteTransaction(transactionId) {
+    if (!confirm('Вы уверены, что хотите удалить эту транзакцию?')) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/financial/transaction/${transactionId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            loadTransactions();
+            alert('Транзакция успешно удалена!');
+        } else {
+            alert('Ошибка удаления транзакции');
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Ошибка удаления транзакции');
     }
 }

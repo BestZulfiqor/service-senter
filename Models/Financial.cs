@@ -1,3 +1,5 @@
+using ServiceCenter.DTOs;
+
 namespace ServiceCenter.Models
 {
     public class FinancialTransaction
@@ -26,7 +28,7 @@ namespace ServiceCenter.Models
         public decimal NetProfit { get; set; }
         public List<FinancialSummary> IncomeByCategory { get; set; } = new();
         public List<FinancialSummary> ExpensesByCategory { get; set; } = new();
-        public List<FinancialTransaction> Transactions { get; set; } = new();
+        public List<TransactionDto> Transactions { get; set; } = new();
     }
 
     public class FinancialSummary

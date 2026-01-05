@@ -209,6 +209,7 @@
                 <button class="tab-btn" data-tab="customers">Клиенты</button>
                 <button class="tab-btn" data-tab="technicians">Техники</button>
                 <button class="tab-btn" data-tab="users">Пользователи</button>
+                <button class="tab-btn" data-tab="financial">Финансы</button>
             </nav>
 
             <div class="tab-content" id="requests">
@@ -299,6 +300,65 @@
                             </tr>
                         </thead>
                         <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content hidden" id="financial">
+                <div class="section-header">
+                    <h2>Финансовый отчет</h2>
+                    <div class="financial-controls">
+                        <input type="date" id="startDate" />
+                        <input type="date" id="endDate" />
+                        <button class="btn btn-primary" onclick="generateFinancialReport()">Сформировать отчет</button>
+                    </div>
+                </div>
+                
+                <div class="financial-summary" id="financialSummary">
+                    <div class="summary-card">
+                        <h3>Общий доход</h3>
+                        <p id="totalIncome">0 ₽</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Общие расходы</h3>
+                        <p id="totalExpenses">0 ₽</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Чистая прибыль</h3>
+                        <p id="netProfit">0 ₽</p>
+                    </div>
+                </div>
+
+                <div class="financial-sections">
+                    <div class="financial-section">
+                        <h3>Доходы по категориям</h3>
+                        <div id="incomeCategories"></div>
+                    </div>
+                    <div class="financial-section">
+                        <h3>Расходы по категориям</h3>
+                        <div id="expenseCategories"></div>
+                    </div>
+                </div>
+
+                <div class="section-header">
+                    <h2>Транзакции</h2>
+                    <button class="btn btn-primary" onclick="showAddTransactionModal()">+ Добавить транзакцию</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="transactionsTable">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Тип</th>
+                                <th>Категория</th>
+                                <th>Описание</th>
+                                <th>Сумма</th>
+                                <th>Способ оплаты</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody"></tbody>
                     </table>
                 </div>
             </div>
