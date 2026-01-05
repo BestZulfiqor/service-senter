@@ -131,7 +131,7 @@ function renderClientRequests(requests) {
             <td>${request.problemDescription.substring(0, 50)}...</td>
             <td>${getStatusBadge(request.status)}</td>
             <td>${request.assignedTechnicianName || 'Не назначен'}</td>
-            <td>${request.finalCost ? request.finalCost + ' ₽' : (request.estimatedCost ? request.estimatedCost + ' ₽' : '-')}</td>
+            <td>${request.finalCost ? request.finalCost + ' с' : (request.estimatedCost ? request.estimatedCost + ' с' : '-')}</td>
             <td>${formatDate(request.createdAt)}</td>
             <td>
                 <button class="btn btn-info" onclick="showRequestDetails(${request.id})">Детали</button>
@@ -237,7 +237,7 @@ function renderTechnicianRequests(requests) {
             <td>${request.deviceBrand} ${request.deviceModel}</td>
             <td>${request.problemDescription.substring(0, 50)}...</td>
             <td>${getStatusBadge(request.status)}</td>
-            <td>${request.finalCost ? request.finalCost + ' ₽' : (request.estimatedCost ? request.estimatedCost + ' ₽' : '-')}</td>
+            <td>${request.finalCost ? request.finalCost + ' с' : (request.estimatedCost ? request.estimatedCost + ' с' : '-')}</td>
             <td>${formatDate(request.createdAt)}</td>
             <td>
                 <div class="action-buttons">
@@ -398,7 +398,7 @@ function renderServiceRequests() {
             <td>${request.problemDescription.substring(0, 50)}...</td>
             <td>${getStatusBadge(request.status)}</td>
             <td>${request.assignedTechnicianName || 'Не назначен'}</td>
-            <td>${request.finalCost ? request.finalCost + ' ₽' : (request.estimatedCost ? request.estimatedCost + ' ₽' : '-')}</td>
+            <td>${request.finalCost ? request.finalCost + ' с' : (request.estimatedCost ? request.estimatedCost + ' с' : '-')}</td>
             <td>${formatDate(request.createdAt)}</td>
             <td>
                 <div class="action-buttons">
@@ -475,7 +475,7 @@ async function showRequestDetails(id) {
                 </div>
                 <div class="detail-item">
                     <label>Стоимость:</label>
-                    <div class="value">${request.finalCost ? request.finalCost + ' ₽' : (request.estimatedCost ? request.estimatedCost + ' ₽ (оценочная)' : '-')}</div>
+                    <div class="value">${request.finalCost ? request.finalCost + ' с' : (request.estimatedCost ? request.estimatedCost + ' с (оценочная)' : '-')}</div>
                 </div>
                 <div class="detail-item" style="grid-column: 1 / -1;">
                     <label>Описание проблемы:</label>
@@ -1146,7 +1146,7 @@ async function generateReceipt(serviceRequestId) {
             loadServiceRequests();
             
             // Показываем информацию о сгенерированном чеке
-            alert(`Чек успешно сгенерирован!\n\nНомер: ${receipt.receiptNumber}\nСумма: ${receipt.totalAmount} ₽\nОписание: ${receipt.servicesDescription}`);
+            alert(`Чек успешно сгенерирован!\n\nНомер: ${receipt.receiptNumber}\nСумма: ${receipt.totalAmount} с\nОписание: ${receipt.servicesDescription}`);
         } else {
             let errorMessage = 'Неизвестная ошибка';
             try {
@@ -1189,7 +1189,7 @@ function renderTransactions() {
             <td><span class="status-badge ${transaction.type === 'Income' ? 'status-completed' : 'status-cancelled'}">${transaction.type === 'Income' ? 'Доход' : 'Расход'}</span></td>
             <td>${transaction.category}</td>
             <td>${transaction.description}</td>
-            <td>${transaction.amount} ₽</td>
+            <td>${transaction.amount} с</td>
             <td>${transaction.paymentMethod}</td>
             <td>
                 <div class="action-buttons">
@@ -1228,9 +1228,9 @@ async function generateFinancialReport() {
 }
 
 function displayFinancialReport(report) {
-    document.getElementById('totalIncome').textContent = report.totalIncome + ' ₽';
-    document.getElementById('totalExpenses').textContent = report.totalExpenses + ' ₽';
-    document.getElementById('netProfit').textContent = (report.totalIncome - report.totalExpenses) + ' ₽';
+    document.getElementById('totalIncome').textContent = report.totalIncome + ' с';
+    document.getElementById('totalExpenses').textContent = report.totalExpenses + ' с';
+    document.getElementById('netProfit').textContent = (report.totalIncome - report.totalExpenses) + ' с';
 
     // Отображение категорий доходов
     const incomeCategories = document.getElementById('incomeCategories');
@@ -1239,7 +1239,7 @@ function displayFinancialReport(report) {
         const div = document.createElement('div');
         div.className = 'category-item';
         div.innerHTML = `
-            <span>${cat.category}: ${cat.amount} ₽ (${cat.percentage.toFixed(1)}%)</span>
+            <span>${cat.category}: ${cat.amount} с (${cat.percentage.toFixed(1)}%)</span>
             <small>${cat.transactionCount} транзакций</small>
         `;
         incomeCategories.appendChild(div);
@@ -1252,7 +1252,7 @@ function displayFinancialReport(report) {
         const div = document.createElement('div');
         div.className = 'category-item';
         div.innerHTML = `
-            <span>${cat.category}: ${cat.amount} ₽ (${cat.percentage.toFixed(1)}%)</span>
+            <span>${cat.category}: ${cat.amount} с (${cat.percentage.toFixed(1)}%)</span>
             <small>${cat.transactionCount} транзакций</small>
         `;
         expenseCategories.appendChild(div);
