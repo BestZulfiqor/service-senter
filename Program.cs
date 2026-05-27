@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 using ServiceCenter.Data;
 using ServiceCenter.Models;
 using ServiceCenter.Hubs;
@@ -126,11 +127,13 @@ app.MapFallbackToFile("index.html");
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    await EnsureDatabaseCreatedAsync(services);
+
     var context = services.GetRequiredService<ServiceCenterDbContext>();
     var userManager = services.GetRequiredService<UserManager<User>>();
     var roleManager = services.GetRequiredService<RoleManager<Role>>();
 
-    // Create database
+    // Apply migrations
     context.Database.Migrate();
 
     // Create roles
@@ -157,3 +160,68 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+static async Task EnsureDatabaseCreatedAsync(IServiceProvider services)
+{
+    var configuration = services.GetRequiredService<IConfiguration>();
+    var defaultConnectionString = configuration.GetConnectionString("DefaultConnection");
+    var maintenanceConnectionString = configuration.GetConnectionString("MaintenanceConnection");
+
+    var defaultConnectionBuilder = new NpgsqlConnectionStringBuilder(defaultConnectionString);
+    var databaseName = defaultConnectionBuilder.Database;
+
+    if (string.IsNullOrWhiteSpace(databaseName))
+        throw new InvalidOperationException("Database name is not configured in DefaultConnection.");
+
+    var connectionString = !string.IsNullOrWhiteSpace(maintenanceConnectionString)
+        ? maintenanceConnectionString
+        : defaultConnectionString;
+
+    var connectionBuilder = new NpgsqlConnectionStringBuilder(connectionString);
+    if (string.IsNullOrWhiteSpace(connectionBuilder.Database) || connectionBuilder.Database == databaseName)
+    {
+        connectionBuilder.Database = "postgres";
+    }
+
+    var maintenanceDatabases = new[] { connectionBuilder.Database, "template1" };
+    PostgresException? lastAuthException = null;
+
+    foreach (var maintenanceDatabase in maintenanceDatabases)
+    {
+        try
+        {
+            var builder = new NpgsqlConnectionStringBuilder(connectionString)
+            {
+                Database = maintenanceDatabase
+            };
+
+            await using var connection = new NpgsqlConnection(builder.ConnectionString);
+            await connection.OpenAsync();
+
+            await using var existsCommand = new NpgsqlCommand("SELECT 1 FROM pg_database WHERE datname = @databaseName", connection);
+            existsCommand.Parameters.AddWithValue("databaseName", databaseName);
+            var exists = await existsCommand.ExecuteScalarAsync();
+
+            if (exists == null)
+            {
+                await using var createCommand = new NpgsqlCommand($"CREATE DATABASE \"{databaseName}\" WITH ENCODING = 'UTF8'", connection);
+                await createCommand.ExecuteNonQueryAsync();
+            }
+
+            return;
+        }
+        catch (PostgresException pgEx) when (pgEx.SqlState == "28P01")
+        {
+            lastAuthException = pgEx;
+        }
+    }
+
+    if (lastAuthException is not null)
+    {
+        throw new InvalidOperationException(
+            "Не удалось подключиться к PostgreSQL для создания базы данных. Проверьте учетные данные в DefaultConnection или MaintenanceConnection и права доступа пользователя.",
+            lastAuthException);
+    }
+
+    throw new InvalidOperationException("Не удалось создать базу данных PostgreSQL. Проверьте конфигурацию DefaultConnection.");
+}
